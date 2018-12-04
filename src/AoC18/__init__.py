@@ -1,9 +1,10 @@
-from pathlib import Path
+from pathlib import PurePath
 
 
 def read_data(f_n):
     ret = []
-    with open(Path(f'data/{f_n}')) as f:
+    parent = PurePath(__file__).parent
+    with open(parent / 'data' / f_n) as f:
         for line in f:
             ret.append(line.rstrip('\n'))
     return ret
