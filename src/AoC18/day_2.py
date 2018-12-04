@@ -40,4 +40,5 @@ def two():
 
 
 if __name__ == '__main__':
+    one()
     two()
