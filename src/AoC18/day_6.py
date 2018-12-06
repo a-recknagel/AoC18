@@ -50,13 +50,13 @@ class Field:
 
     def two(self):
         size = 0
-        threshold = 10000-1  # TODO: find out why
+        threshold = 10000
         for r_idx in range(len(self.field)):
             for c_idx in range(len(self.field[r_idx])):
                 dist_count = 0
                 for o in self.origins:
                     dist_count += self.mh_dist((r_idx, c_idx), o)
-                    if dist_count > threshold:
+                    if dist_count >= threshold:
                         break
                 else:
                     size += 1
