@@ -1,6 +1,14 @@
 from AoC18 import read_data
 
 
+def mh_dist(a, b):
+    t0 = a[0] - b[0]
+    t0 = -t0 if t0 < 0 else t0
+    t1 = a[1] - b[1]
+    t1 = -t1 if t1 < 0 else t1
+    return t0 + t1
+
+
 class Field:
 
     def __init__(self):
@@ -10,20 +18,13 @@ class Field:
         r_max = max(p[0] for p in self.origins) + 1
         self.field = [[None] * c_max for _ in range(r_max)]
 
-    def mh_dist(self, a, b):
-        t0 = a[0] - b[0]
-        t0 = -t0 if t0 < 0 else t0
-        t1 = a[1] - b[1]
-        t1 = -t1 if t1 < 0 else t1
-        return t0 + t1
-
     def fill(self):
         for r_idx in range(len(self.field)):
             for c_idx in range(len(self.field[r_idx])):
                 closest = None
                 min_dist = len(self.field) * len(self.field[r_idx])
                 for point in self.origins:
-                    d = self.mh_dist(point, (r_idx, c_idx))
+                    d = mh_dist(point, (r_idx, c_idx))
                     if d < min_dist:
                         min_dist = d
                         closest = point
@@ -55,7 +56,7 @@ class Field:
             for c_idx in range(len(self.field[r_idx])):
                 dist_count = 0
                 for o in self.origins:
-                    dist_count += self.mh_dist((r_idx, c_idx), o)
+                    dist_count += mh_dist((r_idx, c_idx), o)
                     if dist_count >= threshold:
                         break
                 else:
