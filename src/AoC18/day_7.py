@@ -10,17 +10,24 @@ node_matcher = re.compile(
 
 
 def one():
+    # setup
     inp = read_data('day_7.txt')
     finished = []
     work_queue = []
-    mappings = defaultdict(lambda: [[], set()])
+    mappings = defaultdict(lambda: [[], set()])  # maps steps to list of requirements and set of enablements
+
+    # parse lines into mapping dict
     for line in inp:
         node, inhibited = node_matcher.match(line).groups()
         mappings[node][0].append(inhibited)
         mappings[inhibited][1].add(node)
+
+    # find first job, push it into the work queue
     for node in mappings:
         if not mappings[node][1]:
             heappush(work_queue, node)
+
+    # push and pop into the queue until all jobs are done
     while work_queue:
         current = heappop(work_queue)
         finished.append(current)
