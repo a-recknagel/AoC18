@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Tuple
+from typing import List, Tuple
 
 from AoC18 import read_data
 
@@ -15,7 +15,7 @@ class Track:
     def __init__(self, data):
         # parse input data into something mutable
         x_max = max(len(row) for row in data)
-        self.field = [[' '] * (x_max + 2)]
+        self.field: List[List[str]] = [[' '] * (x_max + 2)]
         for row in data:
             r = [' '] * x_max
             for i, col in enumerate(row):
@@ -30,12 +30,22 @@ class Track:
                     self.carts.append(Cart(x, y, self.field[y][x], self))
                     if self.field[y][x] in '^v':
                         self.field[y][x] = '|'
-                    else:  # self.field[y][x] in '<>'
+                    elif self.field[y][x] in '<>':
                         self.field[y][x] = '-'
+                    else:
+                        print('Error in Track.__init__')
 
     def tick(self):
+        occupied_positions = set()
         for cart in self.carts:
-            cart.tick()
+            d_x, d_y = cart.o.apply(self.field[cart.y][cart.x])
+            cart.x += d_x
+            cart.y += d_y
+            new_pos = (cart.x, cart.x)
+            if new_pos not in occupied_positions:
+                occupied_positions.add(new_pos)
+            else:
+                raise Exception(f'Sneaky crash: {new_pos[0]-1},{new_pos[1]-1}')
         self.carts.sort()
 
     def draw(self, draw=True):
@@ -56,11 +66,11 @@ class Orientation:
     UP = '^', (0, -1)
     DOWN = 'v', (0, +1)
     LEFT = '<', (-1, 0)
-    RIGHT = '>', (1, 0)
+    RIGHT = '>', (+1, 0)
 
-    def __init__(self, init):
-        self.state = init
-        self.current_pref = 'left'
+    def __init__(self, init: str):
+        self.state: str = init
+        self.current_pref: str = 'left'
 
     def left_turn(self) -> Tuple[int, int]:
         if self.state == self.RIGHT[0]:
@@ -76,7 +86,7 @@ class Orientation:
             self.state = self.RIGHT[0]
             return self.RIGHT[1]
         else:
-            print('Error in left_turn')
+            print('Error in Orientation.left_turn')
 
     def go_straight(self) -> Tuple[int, int]:
         if self.state == self.UP[0]:
@@ -88,7 +98,7 @@ class Orientation:
         elif self.state == self.RIGHT[0]:
             return self.RIGHT[1]
         else:
-            print('Error in go_straight')
+            print('Error in Orientation.go_straight')
 
     def right_turn(self) -> Tuple[int, int]:
         if self.state == self.RIGHT[0]:
@@ -104,7 +114,7 @@ class Orientation:
             self.state = self.RIGHT[0]
             return self.RIGHT[1]
         else:
-            print('Error in right_turn')
+            print('Error in Orientation.right_turn')
 
     def turn(self) -> Tuple[int, int]:
         if self.current_pref == 'left':
@@ -117,7 +127,7 @@ class Orientation:
             self.current_pref = 'left'
             return self.right_turn()
         else:
-            print('Error in turn')
+            print('Error in Orientation.turn')
 
     def apply(self, rail) -> Tuple[int, int]:
         if rail == '+':
@@ -135,17 +145,18 @@ class Orientation:
         elif rail == '|' or rail == '-':
             return self.go_straight()
         else:
-            print('Error in apply')
+            print('Error in Orientation.apply')
 
 
 class Cart:
-    def __init__(self, x, y, o, track: Track):
+    def __init__(self, x: int, y: int, o: str, track: Track):
         self.x = x
         self.y = y
         self.o = Orientation(o)
         self.track = track
 
     def tick(self):
+        # this code should probably live in the Track object
         d_x, d_y = self.o.apply(self.track.field[self.y][self.x])
         self.x += d_x
         self.y += d_y
@@ -163,7 +174,8 @@ class Cart:
 def one(data):
     track = Track(data)
     while True:
-        collisions = track.draw(draw=False)
+        collisions = track.draw()
+        print(track.carts)
         if collisions:
             return collisions
         track.tick()
