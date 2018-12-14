@@ -196,7 +196,7 @@ def one(data, draw=False):
 
 if __name__ == '__main__':
     real_inp = read_data('day_13.txt')
-    print(one(test_data1))
-    print(one(test_data2))
-    print(one(test_data3))
-    print(one(real_inp))
+    print(one(test_data1))  # 0,3
+    print(one(test_data2))  # 7.3
+    print(one(test_data3))  # 2,0
+    print(one(real_inp))    # 94,65
