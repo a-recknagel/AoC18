@@ -152,7 +152,10 @@ def two(data, draw=False):
         track.tick()
     if draw:
         track.draw()
-    return f'{track.carts[0].x - 1},{track.carts[0].y - 1}'
+    try:
+        return f'{track.carts[0].x - 1},{track.carts[0].y - 1}'
+    except IndexError:
+        return 'no survivors D='
 
 
 if __name__ == '__main__':
@@ -161,5 +164,7 @@ if __name__ == '__main__':
     print(one(test_data2))  # 7.3
     print(one(test_data3))  # 2,0
     print(one(real_inp))    # 115,138
+    print(two(test_data1))  # no survivors D=
+    print(two(test_data2))  # no survivors D=
     print(two(test_data3))  # 6,4
     print(two(real_inp))    # 0,98
