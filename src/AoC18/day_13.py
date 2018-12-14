@@ -45,7 +45,7 @@ class Orientation:
         self.state: str = init
         self.turns = cycle([self.LEFT_TURN, self.STRAIGHT, self.RIGHT_TURN])
 
-    def turn(self, rail) -> Tuple[int, int]:
+    def move(self, rail) -> Tuple[int, int]:
         if rail == '+':
             next_turn = next(self.turns)
         elif rail in r'\/':
@@ -80,7 +80,7 @@ class Cart:
 
 class Track:
     def __init__(self, data):
-        self.crashes: List[Tuple[int, int]] = []
+        self.crashes: List[Cart] = []
         # parse input data into something mutable
         x_max = max(len(row) for row in data)
         self.field: List[List[str]] = [[' '] * (x_max + 2)]
@@ -105,24 +105,30 @@ class Track:
 
     def tick(self):
         self.crashes = []
-        occupied_positions = {*self.carts}
+        occupied = {*self.carts}
         for cart in self.carts:
-            occupied_positions.remove(cart)
-            d_x, d_y = cart.o.turn(self.field[cart.y][cart.x])
+            if cart in self.crashes:
+                continue
+            occupied.remove(cart)
+            d_x, d_y = cart.o.move(self.field[cart.y][cart.x])
             cart.x += d_x
             cart.y += d_y
-            if cart not in occupied_positions:
-                occupied_positions.add(cart)
+            if cart not in occupied:
+                occupied.add(cart)
             else:
-                self.crashes.append((cart.x, cart.y))
+                self.crashes.extend([c for c in occupied if c == cart])
+                self.crashes.append(cart)
+                occupied.remove(cart)
+        for crash in self.crashes:
+            self.carts.remove(crash)
         self.carts.sort()
 
     def draw(self):
         pic = deepcopy(self.field)
         for cart in self.carts:
             pic[cart.y][cart.x] = cart.o.state
-        for crash_x, crash_y in self.crashes:
-            pic[crash_y][crash_x] = 'x'
+        for crash in self.crashes:
+            pic[crash.y][crash.x] = 'x'
         print('\n'.join(''.join(line) for line in pic))
 
 
@@ -135,7 +141,18 @@ def one(data, draw=False):
     if draw:
         track.draw()
         print(track.carts)
-    return f'{track.crashes[0][0] - 1},{track.crashes[0][1] - 1}'
+    return f'{track.crashes[0].x - 1},{track.crashes[0].y - 1}'
+
+
+def two(data, draw=False):
+    track = Track(data)
+    while len(track.carts) > 1:
+        if draw:
+            track.draw()
+        track.tick()
+    if draw:
+        track.draw()
+    return f'{track.carts[0].x - 1},{track.carts[0].y - 1}'
 
 
 if __name__ == '__main__':
@@ -144,3 +161,5 @@ if __name__ == '__main__':
     print(one(test_data2))  # 7.3
     print(one(test_data3))  # 2,0
     print(one(real_inp))    # 115,138
+    print(two(test_data3))  # 6,4
+    print(two(real_inp))    # 0,98
