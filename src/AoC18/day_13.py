@@ -36,6 +36,11 @@ class Orientation:
     RIGHT_TURN = {UP[0]: RIGHT, RIGHT[0]: DOWN, DOWN[0]: LEFT, LEFT[0]: UP}
     STRAIGHT = {UP[0]: UP, RIGHT[0]: RIGHT, DOWN[0]: DOWN, LEFT[0]: LEFT}
 
+    CURVE = {'/': {UP[0]: RIGHT_TURN, DOWN[0]: RIGHT_TURN,
+                   LEFT[0]: LEFT_TURN, RIGHT[0]: LEFT_TURN},
+             '\\': {UP[0]: LEFT_TURN, DOWN[0]: LEFT_TURN,
+                    LEFT[0]: RIGHT_TURN, RIGHT[0]: RIGHT_TURN}}
+
     def __init__(self, init: str):
         self.state: str = init
         self.turns = cycle([self.LEFT_TURN, self.STRAIGHT, self.RIGHT_TURN])
@@ -43,20 +48,12 @@ class Orientation:
     def turn(self, rail) -> Tuple[int, int]:
         if rail == '+':
             next_turn = next(self.turns)
-        elif rail == '/':
-            if self.state == self.UP[0] or self.state == self.DOWN[0]:
-                next_turn = self.RIGHT_TURN
-            else:  # self.state == self.LEFT[0] or self.state == self.RIGHT[0]
-                next_turn = self.LEFT_TURN
-        elif rail == '\\':
-            if self.state == self.UP[0] or self.state == self.DOWN[0]:
-                next_turn = self.LEFT_TURN
-            else:  # self.state == self.LEFT[0] or self.state == self.RIGHT[0]
-                next_turn = self.RIGHT_TURN
+        elif rail in r'\/':
+            next_turn = self.CURVE[rail][self.state]
         else:  # rail == '|' or rail == '-'
             next_turn = self.STRAIGHT
-        self.state, turn_coords = next_turn[self.state]
-        return turn_coords
+        self.state, (y, x) = next_turn[self.state]
+        return y, x
 
 
 class Cart:
