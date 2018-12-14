@@ -1,4 +1,5 @@
 from copy import deepcopy
+from itertools import cycle
 from typing import List, Tuple
 
 from AoC18 import read_data
@@ -31,84 +32,31 @@ class Orientation:
     LEFT = '<', (-1, 0)
     RIGHT = '>', (+1, 0)
 
+    LEFT_TURN = {UP[0]: LEFT, LEFT[0]: DOWN, DOWN[0]: RIGHT, RIGHT[0]: UP}
+    RIGHT_TURN = {UP[0]: RIGHT, RIGHT[0]: DOWN, DOWN[0]: LEFT, LEFT[0]: UP}
+    STRAIGHT = {UP[0]: UP, RIGHT[0]: RIGHT, DOWN[0]: DOWN, LEFT[0]: LEFT}
+
     def __init__(self, init: str):
         self.state: str = init
-        self.current_pref: str = 'left'
+        self.turns = cycle([self.LEFT_TURN, self.STRAIGHT, self.RIGHT_TURN])
 
-    def _left_turn(self) -> Tuple[int, int]:
-        if self.state == self.RIGHT[0]:
-            self.state = self.UP[0]
-            return self.UP[1]
-        elif self.state == self.UP[0]:
-            self.state = self.LEFT[0]
-            return self.LEFT[1]
-        elif self.state == self.LEFT[0]:
-            self.state = self.DOWN[0]
-            return self.DOWN[1]
-        elif self.state == self.DOWN[0]:
-            self.state = self.RIGHT[0]
-            return self.RIGHT[1]
-        else:
-            print('Error in Orientation.left_turn')
-
-    def _go_straight(self) -> Tuple[int, int]:
-        if self.state == self.UP[0]:
-            return self.UP[1]
-        elif self.state == self.DOWN[0]:
-            return self.DOWN[1]
-        elif self.state == self.LEFT[0]:
-            return self.LEFT[1]
-        elif self.state == self.RIGHT[0]:
-            return self.RIGHT[1]
-        else:
-            print('Error in Orientation.go_straight')
-
-    def _right_turn(self) -> Tuple[int, int]:
-        if self.state == self.RIGHT[0]:
-            self.state = self.DOWN[0]
-            return self.DOWN[1]
-        elif self.state == self.DOWN[0]:
-            self.state = self.LEFT[0]
-            return self.LEFT[1]
-        elif self.state == self.LEFT[0]:
-            self.state = self.UP[0]
-            return self.UP[1]
-        elif self.state == self.UP[0]:
-            self.state = self.RIGHT[0]
-            return self.RIGHT[1]
-        else:
-            print('Error in Orientation.right_turn')
-
-    def _turn(self) -> Tuple[int, int]:
-        if self.current_pref == 'left':
-            self.current_pref = 'straight'
-            return self._left_turn()
-        elif self.current_pref == 'straight':
-            self.current_pref = 'right'
-            return self._go_straight()
-        elif self.current_pref == 'right':
-            self.current_pref = 'left'
-            return self._right_turn()
-        else:
-            print('Error in Orientation.turn')
-
-    def apply(self, rail) -> Tuple[int, int]:
+    def turn(self, rail) -> Tuple[int, int]:
         if rail == '+':
-            return self._turn()
-        elif rail == r'/':
+            next_turn = next(self.turns)
+        elif rail == '/':
             if self.state == self.UP[0] or self.state == self.DOWN[0]:
-                return self._right_turn()
-            if self.state == self.LEFT[0] or self.state == self.RIGHT[0]:
-                return self._left_turn()
+                next_turn = self.RIGHT_TURN
+            else:  # self.state == self.LEFT[0] or self.state == self.RIGHT[0]
+                next_turn = self.LEFT_TURN
         elif rail == '\\':
             if self.state == self.UP[0] or self.state == self.DOWN[0]:
-                return self._left_turn()
-            if self.state == self.LEFT[0] or self.state == self.RIGHT[0]:
-                return self._right_turn()
-        elif rail == '|' or rail == '-':
-            return self._go_straight()
-        else:
-            print('Error in Orientation.apply')
+                next_turn = self.LEFT_TURN
+            else:  # self.state == self.LEFT[0] or self.state == self.RIGHT[0]
+                next_turn = self.RIGHT_TURN
+        else:  # rail == '|' or rail == '-'
+            next_turn = self.STRAIGHT
+        self.state, turn_coords = next_turn[self.state]
+        return turn_coords
 
 
 class Cart:
@@ -127,7 +75,7 @@ class Cart:
         return self.o.state
 
     def __repr__(self):
-        return str((self.y, self.x, self.o.state, self.o.current_pref))
+        return str((self.y, self.x, self.o.state))
 
     def __hash__(self):
         return hash((self.y, self.x))
@@ -163,7 +111,7 @@ class Track:
         occupied_positions = {*self.carts}
         for cart in self.carts:
             occupied_positions.remove(cart)
-            d_x, d_y = cart.o.apply(self.field[cart.y][cart.x])
+            d_x, d_y = cart.o.turn(self.field[cart.y][cart.x])
             cart.x += d_x
             cart.y += d_y
             if cart not in occupied_positions:
