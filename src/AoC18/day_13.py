@@ -35,7 +35,7 @@ class Orientation:
         self.state: str = init
         self.current_pref: str = 'left'
 
-    def left_turn(self) -> Tuple[int, int]:
+    def _left_turn(self) -> Tuple[int, int]:
         if self.state == self.RIGHT[0]:
             self.state = self.UP[0]
             return self.UP[1]
@@ -51,7 +51,7 @@ class Orientation:
         else:
             print('Error in Orientation.left_turn')
 
-    def go_straight(self) -> Tuple[int, int]:
+    def _go_straight(self) -> Tuple[int, int]:
         if self.state == self.UP[0]:
             return self.UP[1]
         elif self.state == self.DOWN[0]:
@@ -63,7 +63,7 @@ class Orientation:
         else:
             print('Error in Orientation.go_straight')
 
-    def right_turn(self) -> Tuple[int, int]:
+    def _right_turn(self) -> Tuple[int, int]:
         if self.state == self.RIGHT[0]:
             self.state = self.DOWN[0]
             return self.DOWN[1]
@@ -79,34 +79,34 @@ class Orientation:
         else:
             print('Error in Orientation.right_turn')
 
-    def turn(self) -> Tuple[int, int]:
+    def _turn(self) -> Tuple[int, int]:
         if self.current_pref == 'left':
             self.current_pref = 'straight'
-            return self.left_turn()
+            return self._left_turn()
         elif self.current_pref == 'straight':
             self.current_pref = 'right'
-            return self.go_straight()
+            return self._go_straight()
         elif self.current_pref == 'right':
             self.current_pref = 'left'
-            return self.right_turn()
+            return self._right_turn()
         else:
             print('Error in Orientation.turn')
 
     def apply(self, rail) -> Tuple[int, int]:
         if rail == '+':
-            return self.turn()
+            return self._turn()
         elif rail == r'/':
             if self.state == self.UP[0] or self.state == self.DOWN[0]:
-                return self.right_turn()
+                return self._right_turn()
             if self.state == self.LEFT[0] or self.state == self.RIGHT[0]:
-                return self.left_turn()
+                return self._left_turn()
         elif rail == '\\':
             if self.state == self.UP[0] or self.state == self.DOWN[0]:
-                return self.left_turn()
+                return self._left_turn()
             if self.state == self.LEFT[0] or self.state == self.RIGHT[0]:
-                return self.right_turn()
+                return self._right_turn()
         elif rail == '|' or rail == '-':
-            return self.go_straight()
+            return self._go_straight()
         else:
             print('Error in Orientation.apply')
 
