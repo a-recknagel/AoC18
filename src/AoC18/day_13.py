@@ -120,16 +120,22 @@ class Cart:
     def __gt__(self, other):
         return (self.y, self.x) > (other.y, other.x)
 
+    def __eq__(self, other):
+        return (self.y, self.x) == (other.y, other.x)
+
     def __str__(self):
         return self.o.state
 
     def __repr__(self):
         return str((self.y, self.x, self.o.state, self.o.current_pref))
 
+    def __hash__(self):
+        return hash((self.y, self.x))
+
 
 class Track:
     def __init__(self, data):
-        self.crashes = []
+        self.crashes: List[Tuple[int, int]] = []
         # parse input data into something mutable
         x_max = max(len(row) for row in data)
         self.field: List[List[str]] = [[' '] * (x_max + 2)]
@@ -140,7 +146,7 @@ class Track:
             self.field.append([' '] + r + [' '])
         self.field.append([' '] * (x_max + 2))
         # generate carts & replace cart markers with correct track symbols
-        self.carts = []
+        self.carts: List[Cart] = []
         for y in range(len(self.field)):
             for x in range(len(self.field[y])):
                 if self.field[y][x] in '^v<>':
@@ -154,16 +160,16 @@ class Track:
 
     def tick(self):
         self.crashes = []
-        occupied_positions = set()
+        occupied_positions = {*self.carts}
         for cart in self.carts:
+            occupied_positions.remove(cart)
             d_x, d_y = cart.o.apply(self.field[cart.y][cart.x])
             cart.x += d_x
             cart.y += d_y
-            new_pos = (cart.x, cart.y)
-            if new_pos not in occupied_positions:
-                occupied_positions.add(new_pos)
+            if cart not in occupied_positions:
+                occupied_positions.add(cart)
             else:
-                self.crashes.append(new_pos)
+                self.crashes.append((cart.x, cart.y))
         self.carts.sort()
 
     def draw(self):
@@ -192,4 +198,4 @@ if __name__ == '__main__':
     print(one(test_data1))  # 0,3
     print(one(test_data2))  # 7.3
     print(one(test_data3))  # 2,0
-    print(one(real_inp))    # 94,65
+    print(one(real_inp))    # 115,138
