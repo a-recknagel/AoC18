@@ -140,7 +140,6 @@ def one(data, draw=False):
         track.tick()
     if draw:
         track.draw()
-        print(track.carts)
     return f'{track.crashes[0].x - 1},{track.crashes[0].y - 1}'
 
 
