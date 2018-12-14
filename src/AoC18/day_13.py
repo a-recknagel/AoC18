@@ -3,16 +3,31 @@ from typing import List, Tuple
 
 from AoC18 import read_data
 
-inp = r'''/->-\
+test_data1 = r'''|
+v
+|
+|
+|
+^
+|'''.split('\n')
+test_data2 = r'''/->-\        
 |   |  /----\
 | /-+--+-\  |
 | | |  | v  |
 \-+-/  \-+--/
-  \------/'''.split('\n')
+  \------/   '''.split('\n')
+test_data3 = r'''/>-<\  
+|   |  
+| /<+-\
+| | | v
+\>+</ |
+  |   ^
+  \<->/'''.split('\n')
 
 
 class Track:
     def __init__(self, data):
+        self.crashes = []
         # parse input data into something mutable
         x_max = max(len(row) for row in data)
         self.field: List[List[str]] = [[' '] * (x_max + 2)]
@@ -36,30 +51,26 @@ class Track:
                         print('Error in Track.__init__')
 
     def tick(self):
+        self.crashes = []
         occupied_positions = set()
         for cart in self.carts:
             d_x, d_y = cart.o.apply(self.field[cart.y][cart.x])
             cart.x += d_x
             cart.y += d_y
-            new_pos = (cart.x, cart.x)
+            new_pos = (cart.x, cart.y)
             if new_pos not in occupied_positions:
                 occupied_positions.add(new_pos)
             else:
-                raise Exception(f'Sneaky crash: {new_pos[0]-1},{new_pos[1]-1}')
+                self.crashes.append(new_pos)
         self.carts.sort()
 
-    def draw(self, draw=True):
-        collision = ''
+    def draw(self):
         pic = deepcopy(self.field)
         for cart in self.carts:
-            if pic[cart.y][cart.x] in '^v<>x':
-                pic[cart.y][cart.x] = 'x'
-                collision = f'{cart.x-1},{cart.y-1}'  # subtract for borders
-            else:
-                pic[cart.y][cart.x] = cart.o.state
-        if draw:
-            print('\n'.join(''.join(line) for line in pic))
-        return collision
+            pic[cart.y][cart.x] = cart.o.state
+        for crash_x, crash_y in self.crashes:
+            pic[crash_y][crash_x] = 'x'
+        print('\n'.join(''.join(line) for line in pic))
 
 
 class Orientation:
@@ -171,16 +182,21 @@ class Cart:
         return str((self.y, self.x, self.o.state, self.o.current_pref))
 
 
-def one(data):
+def one(data, draw=False):
     track = Track(data)
-    while True:
-        collisions = track.draw()
-        print(track.carts)
-        if collisions:
-            return collisions
+    while not track.crashes:
+        if draw:
+            track.draw()
         track.tick()
+    if draw:
+        track.draw()
+        print(track.carts)
+    return f'{track.crashes[0][0] - 1},{track.crashes[0][1] - 1}'
 
 
 if __name__ == '__main__':
     real_inp = read_data('day_13.txt')
+    print(one(test_data1))
+    print(one(test_data2))
+    print(one(test_data3))
     print(one(real_inp))
