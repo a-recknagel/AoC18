@@ -25,54 +25,6 @@ test_data3 = r'''/>-<\
   \<->/'''.split('\n')
 
 
-class Track:
-    def __init__(self, data):
-        self.crashes = []
-        # parse input data into something mutable
-        x_max = max(len(row) for row in data)
-        self.field: List[List[str]] = [[' '] * (x_max + 2)]
-        for row in data:
-            r = [' '] * x_max
-            for i, col in enumerate(row):
-                r[i] = col
-            self.field.append([' '] + r + [' '])
-        self.field.append([' '] * (x_max + 2))
-        # generate carts & replace cart markers with correct track symbols
-        self.carts = []
-        for y in range(len(self.field)):
-            for x in range(len(self.field[y])):
-                if self.field[y][x] in '^v<>':
-                    self.carts.append(Cart(x, y, self.field[y][x], self))
-                    if self.field[y][x] in '^v':
-                        self.field[y][x] = '|'
-                    elif self.field[y][x] in '<>':
-                        self.field[y][x] = '-'
-                    else:
-                        print('Error in Track.__init__')
-
-    def tick(self):
-        self.crashes = []
-        occupied_positions = set()
-        for cart in self.carts:
-            d_x, d_y = cart.o.apply(self.field[cart.y][cart.x])
-            cart.x += d_x
-            cart.y += d_y
-            new_pos = (cart.x, cart.y)
-            if new_pos not in occupied_positions:
-                occupied_positions.add(new_pos)
-            else:
-                self.crashes.append(new_pos)
-        self.carts.sort()
-
-    def draw(self):
-        pic = deepcopy(self.field)
-        for cart in self.carts:
-            pic[cart.y][cart.x] = cart.o.state
-        for crash_x, crash_y in self.crashes:
-            pic[crash_y][crash_x] = 'x'
-        print('\n'.join(''.join(line) for line in pic))
-
-
 class Orientation:
     UP = '^', (0, -1)
     DOWN = 'v', (0, +1)
@@ -160,17 +112,10 @@ class Orientation:
 
 
 class Cart:
-    def __init__(self, x: int, y: int, o: str, track: Track):
+    def __init__(self, x: int, y: int, o: str):
         self.x = x
         self.y = y
         self.o = Orientation(o)
-        self.track = track
-
-    def tick(self):
-        # this code should probably live in the Track object
-        d_x, d_y = self.o.apply(self.track.field[self.y][self.x])
-        self.x += d_x
-        self.y += d_y
 
     def __gt__(self, other):
         return (self.y, self.x) > (other.y, other.x)
@@ -180,6 +125,54 @@ class Cart:
 
     def __repr__(self):
         return str((self.y, self.x, self.o.state, self.o.current_pref))
+
+
+class Track:
+    def __init__(self, data):
+        self.crashes = []
+        # parse input data into something mutable
+        x_max = max(len(row) for row in data)
+        self.field: List[List[str]] = [[' '] * (x_max + 2)]
+        for row in data:
+            r = [' '] * x_max
+            for i, col in enumerate(row):
+                r[i] = col
+            self.field.append([' '] + r + [' '])
+        self.field.append([' '] * (x_max + 2))
+        # generate carts & replace cart markers with correct track symbols
+        self.carts = []
+        for y in range(len(self.field)):
+            for x in range(len(self.field[y])):
+                if self.field[y][x] in '^v<>':
+                    self.carts.append(Cart(x, y, self.field[y][x]))
+                    if self.field[y][x] in '^v':
+                        self.field[y][x] = '|'
+                    elif self.field[y][x] in '<>':
+                        self.field[y][x] = '-'
+                    else:
+                        print('Error in Track.__init__')
+
+    def tick(self):
+        self.crashes = []
+        occupied_positions = set()
+        for cart in self.carts:
+            d_x, d_y = cart.o.apply(self.field[cart.y][cart.x])
+            cart.x += d_x
+            cart.y += d_y
+            new_pos = (cart.x, cart.y)
+            if new_pos not in occupied_positions:
+                occupied_positions.add(new_pos)
+            else:
+                self.crashes.append(new_pos)
+        self.carts.sort()
+
+    def draw(self):
+        pic = deepcopy(self.field)
+        for cart in self.carts:
+            pic[cart.y][cart.x] = cart.o.state
+        for crash_x, crash_y in self.crashes:
+            pic[crash_y][crash_x] = 'x'
+        print('\n'.join(''.join(line) for line in pic))
 
 
 def one(data, draw=False):
