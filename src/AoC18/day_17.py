@@ -102,7 +102,6 @@ class Map:
 def one(data):
     m = Map(data)
     count = 0
-    m.draw()
     while m.tick():
         count += 1
     m.draw()
@@ -110,5 +109,6 @@ def one(data):
 
 if __name__ == '__main__':
     real_inp = read_data('day_17.txt')
-    one(real_inp)
+    one(test_1)    # 57
+    one(real_inp)  # 30746
 
