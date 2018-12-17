@@ -23,6 +23,7 @@ def get_range(r):
 
 class Map:
     def __init__(self, data):
+        # parse input data into clay-coordinates
         get_y = re.compile(r'y=((\d+\.\.\d+)|(\d+))')
         get_x = re.compile(r'x=((\d+\.\.\d+)|(\d+))')
         clay = []
@@ -30,23 +31,23 @@ class Map:
             y_range = get_range(get_y.search(line).group(1))
             x_range = get_range(get_x.search(line).group(1))
             clay.extend(itertools.product(y_range, x_range))
-        self.source = (0, 500)
-        self.min_y, self.max_y, self.min_x, self.max_x = (
-            self.source[0], self.source[0], self.source[1], self.source[1])
+        # find area dimensions, initialize area with them
+        max_y, min_x, max_x = 0, 500, 500
         for y, x in clay:
-            self.min_y = min(self.min_y, y)
-            self.max_y = max(self.max_y, y)
-            self.min_x = min(self.min_x, x)
-            self.max_x = max(self.max_x, x)
-        self.area = [['.'] * abs(self.min_x - (self.max_x + 3)) for _ in
-                     range(self.min_y, self.max_y+1)]
+            max_y = max(max_y, y)
+            min_x = min(min_x, x)
+            max_x = max(max_x, x)
+        self.area = [['.'] * abs(min_x - (max_x + 3)) for _ in
+                     range(max_y+1)]
+        # fill with clay
         for y, x in clay:
-            self.area[y-self.min_y][x-self.min_x+1] = '#'
-        self.area[self.source[0]-self.min_y][self.source[1]-self.min_x+1] = '+'
-        self.drops: List[Tuple[int, int]] = [
-            (self.source[0]+1-self.min_y, self.source[1]+1-self.min_x)]
+            self.area[y][x-min_x+1] = '#'
+        # add source, add first drop below it
+        self.area[0][501-min_x] = '+'
+        self.drops: List[Tuple[int, int]] = [(1, 501-min_x)]
 
     def fill(self, y, x):
+        # find out how far the water can flow, and if it is an enclosed level
         enclosed_left, enclosed_right = True, True
         left_x, right_x = (x-1, x+1)
         while enclosed_left:
@@ -62,9 +63,11 @@ class Map:
             if self.area[y+1][right_x] == '.':
                 enclosed_right = False
             right_x += 1
+        # if enclosed to both sides, standing water + add drop one level above
         if enclosed_left and enclosed_right:
             self.area[y][left_x:right_x] = ['~'] * (right_x - left_x)
             yield (y-1, x)
+        # if not, flowing water and add drops where appropriate
         else:
             self.area[y][left_x:right_x] = ['|'] * (right_x - left_x)
             if not enclosed_left:
@@ -73,25 +76,20 @@ class Map:
                 yield (y, right_x-1)
 
     def tick(self):
-        if not self.drops:
-            return False
         new_drops = []
         for y, x in self.drops:
             self.area[y][x] = '|'
             try:
                 below = self.area[y+1][x]
             except IndexError:
-                # print(f"(drop ({y+1}, {x}) not counted: below maximum y
-                # value)")
-                continue
+                continue  # not counted: below maximum y value
             if below == '|':
-                continue  # seems sensible...
+                continue  # don't let water flow on top of flowing water
             if below == '.':
-                new_drops.append((y+1, x))
+                new_drops.append((y+1, x))  # straight down
             else:
-                new_drops.extend(self.fill(y, x))
+                new_drops.extend(self.fill(y, x))  # to the sides
         self.drops = new_drops
-        return True
 
     def draw(self):
         pic = '\n'.join(''.join(row) for row in self.area)
@@ -101,9 +99,8 @@ class Map:
 
 def one(data):
     m = Map(data)
-    count = 0
-    while m.tick():
-        count += 1
+    while m.drops:
+        m.tick()
     m.draw()
 
 
