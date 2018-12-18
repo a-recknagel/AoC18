@@ -85,8 +85,6 @@ class Map:
             print(', '.join(map(repr, (u for u in row if isinstance(u, Unit)))))  # stats
         print(f"Score: {self.score()}\n")
 
-    def
-
     def shortest_path(self, source: Unit, target: Unit):
         ...
 

@@ -1,6 +1,6 @@
 import itertools
 import re
-from typing import List, Tuple
+from typing import Set, Tuple
 
 from AoC18 import read_data
 
@@ -42,9 +42,9 @@ class Map:
         # fill with clay
         for y, x in clay:
             self.area[y][x-min_x+1] = '#'
-        # add source, add first drop below it
+        # add source, add first drop below it. 'drops' is a set to avoid merging streams to create duplicate drops
         self.area[0][501-min_x] = '+'
-        self.drops: List[Tuple[int, int]] = [(1, 501-min_x)]
+        self.drops: Set[Tuple[int, int]] = {(1, 501-min_x)}
 
     def fill(self, y, x):
         # find out how far the water can flow, and if it is an enclosed level
@@ -63,11 +63,11 @@ class Map:
             if self.area[y+1][right_x] == '.':
                 enclosed_right = False
             right_x += 1
-        # if enclosed to both sides, standing water + add drop one level above
+        # if enclosed to both sides -> standing water + add drop one level above
         if enclosed_left and enclosed_right:
             self.area[y][left_x:right_x] = ['~'] * (right_x - left_x)
             yield (y-1, x)
-        # if not, flowing water and add drops where appropriate
+        # if not -> flowing water and add drops where appropriate
         else:
             self.area[y][left_x:right_x] = ['|'] * (right_x - left_x)
             if not enclosed_left:
@@ -76,7 +76,7 @@ class Map:
                 yield (y, right_x-1)
 
     def tick(self):
-        new_drops = []
+        new_drops: Set[Tuple[int, int]] = set()
         for y, x in self.drops:
             self.area[y][x] = '|'
             try:
@@ -86,26 +86,37 @@ class Map:
             if below == '|':
                 continue  # don't let water flow on top of flowing water
             if below == '.':
-                new_drops.append((y+1, x))  # straight down
+                new_drops.add((y+1, x))  # straight down
             else:
-                new_drops.extend(self.fill(y, x))  # to the sides
+                new_drops |= {*self.fill(y, x)}  # to the sides
         self.drops = new_drops
 
-    def draw(self):
+    def picture(self, draw=True):
         pic = '\n'.join(''.join(row) for row in self.area)
-        print(pic)
-        print(f"Watery tiles: {pic.count('|') + pic.count('~')}\n")
+        if draw:
+            print(pic)
+        return pic.count('|'), pic.count('~')
 
 
 def one(data):
     m = Map(data)
     while m.drops:
         m.tick()
-    m.draw()
+    flowing, settled = m.picture(draw=True)
+    return flowing + settled
+
+
+def two(data):
+    m = Map(data)
+    while m.drops:
+        m.tick()
+    flowing, settled = m.picture(draw=True)
+    return settled
 
 
 if __name__ == '__main__':
     real_inp = read_data('day_17.txt')
-    one(test_1)    # 57
-    one(real_inp)  # 30746
+    print(one(test_1))    # 57
+    print(one(real_inp))  # 30746, incorrect. 9 too many, still dunno why =[
+    print(two(real_inp))  # 24699
 
