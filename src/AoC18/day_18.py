@@ -26,7 +26,7 @@ class LumberArea:
         for y_d, x_d in [(-1, -1), (-1, 0), (-1, 1), (0, -1),
                          (0, 1), (1, -1), (1, 0), (1, 1)]:
             try:
-                if (y+y_d) < 0 or (x+x_d) < 0:
+                if (y+y_d) < 0 or (x+x_d) < 0:  # skip negative indices
                     continue
                 acre = self.field[y+y_d][x+x_d]
                 ret[acre] += 1
@@ -37,7 +37,7 @@ class LumberArea:
     def multi_tick(self, times):
         for t in range(times):
             current = self.picture()
-            if current in self.memory:  # cycle found?
+            if current in self.memory:  # cycle found!
                 cycle_length = t - self.memory[current]
                 jump_idx = (times - t) % cycle_length
                 print(f"jumping ahead {jump_idx} times, skipping {times - t}.")
@@ -47,7 +47,6 @@ class LumberArea:
             else:
                 self.memory[current] = t
             self.tick()
-        return self.value()
 
     def tick(self):
         update = deepcopy(self.field)
@@ -66,9 +65,8 @@ class LumberArea:
     def picture(self):
         return '\n'.join(''.join(row) for row in self.field)
 
-    def value(self, pic=None):
-        if pic is None:
-            pic = self.picture()
+    def value(self):
+        pic = self.picture()
         return pic.count('.'), pic.count('|'), pic.count('#')
 
 
