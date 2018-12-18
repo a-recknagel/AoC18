@@ -32,8 +32,9 @@ class Map:
             x_range = get_range(get_x.search(line).group(1))
             clay.extend(itertools.product(y_range, x_range))
         # find area dimensions, initialize area with them
-        max_y, min_x, max_x = 0, 500, 500
+        self.min_y, max_y, min_x, max_x = float('inf'), 0, 500, 500
         for y, x in clay:
+            self.min_y = min(self.min_y, y)
             max_y = max(max_y, y)
             min_x = min(min_x, x)
             max_x = max(max_x, x)
@@ -95,7 +96,9 @@ class Map:
         pic = '\n'.join(''.join(row) for row in self.area)
         if draw:
             print(pic)
-        return pic.count('|'), pic.count('~')
+        # subtract all water above the first clay
+        ignored = '\n'.join(''.join(row) for _, row in zip(range(self.min_y), self.area))
+        return pic.count('|')-ignored.count('|'), pic.count('~')
 
 
 def one(data):
@@ -117,6 +120,5 @@ def two(data):
 if __name__ == '__main__':
     real_inp = read_data('day_17.txt')
     print(one(test_1))    # 57
-    print(one(real_inp))  # 30746, incorrect. 9 too many, still dunno why =[
+    print(one(real_inp))  # 30737
     print(two(real_inp))  # 24699
-
