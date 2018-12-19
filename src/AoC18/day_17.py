@@ -43,7 +43,7 @@ class Map:
         # fill with clay
         for y, x in clay:
             self.area[y][x-min_x+1] = '#'
-        # add source, add first drop below it. 'drops' is a set to avoid merging streams to create duplicate drops
+        # add source, add first drop below it
         self.area[0][501-min_x] = '+'
         self.drops: Set[Tuple[int, int]] = {(1, 501-min_x)}
 

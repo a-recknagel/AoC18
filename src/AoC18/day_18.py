@@ -40,7 +40,7 @@ class LumberArea:
             if current in self.memory:  # cycle found!
                 cycle_length = t - self.memory[current]
                 jump_idx = (times - t) % cycle_length
-                print(f"jumping ahead {jump_idx} times, skipping {times - t}.")
+                # print(f"jumping ahead {jump_idx} times, skipping {times-t}.")
                 for ff in range(jump_idx):
                     self.tick()
                 break
