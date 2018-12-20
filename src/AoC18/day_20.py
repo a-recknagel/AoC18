@@ -51,9 +51,9 @@ def two(data):
 
 if __name__ == '__main__':
     inp = read_data('day_20.txt')[0]
-    print(one(test_1))
-    print(one(test_2))
-    print(one(test_3))
-    print(one(test_4))
-    print(one(test_5))
-    print(one(inp))
+    print(one(test_1))  # 3
+    print(one(test_2))  # 10
+    print(one(test_3))  # 30
+    print(one(test_4))  # 23
+    print(one(test_5))  # 31
+    print(one(inp))     # ????
