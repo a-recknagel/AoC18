@@ -13,8 +13,8 @@ seti 9 0 5'''.split('\n')
 
 class Device:
 
-    def __init__(self):
-        self.regs = [0, 0, 0, 0, 0, 0]
+    def __init__(self, registers=(0, 0, 0, 0, 0, 0)):
+        self.regs = [*registers]
         self.ip_reg = None
 
     def __str__(self):
@@ -83,22 +83,19 @@ class Device:
             if VERBOSE:
                 print(self)
             self.regs[self.ip_reg] += 1
-        print(self.regs[0])
+        return self.regs[0]
 
 
 def one(data):
-    d = Device()
-    d.run(data)
+    return Device().run(data)
 
 
 def two(data):
-    d = Device()
-    d.regs[0] = 1
-    d.run(data)
+    return Device((1, 0, 0, 0, 0, 0)).run(data)
 
 
 if __name__ == '__main__':
-    VERBOSE = True
+    VERBOSE = False
     inp = read_data('day_19.txt')
     print(one(inp))  # terminates, 912
     print(two(inp))  # doesn't terminate
